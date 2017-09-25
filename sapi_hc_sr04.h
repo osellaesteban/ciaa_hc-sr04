@@ -38,9 +38,9 @@
 #define _SAPI_HC_SR04_H_
 
 /*==================[inclusions]=============================================*/
-
+//#include "sapi.h"
 #include "sapi_datatypes.h"
-
+#include "sapi_timer.h"
 /*==================[cplusplus]==============================================*/
 
 #ifdef __cplusplus
@@ -53,9 +53,9 @@ extern "C" {
 
 
 /*==================[typedef]================================================*/
-#define HC_SR04_min_period 16666
-#define HC_SR04_DEFAULT_period 16666 // in us
-#define HC_SR04_WINDOW_UPPER_LIMIT 23529
+#define HC_SR04_min_period 12240000 // in ticks, it's 60ms at 204MHz
+#define HC_SR04_DEFAULT_period 12240000
+#define HC_SR04_WINDOW_UPPER_LIMIT 4800000 // 2*4m/340m/s*204Mtick/s
 
 
 typedef enum {
@@ -66,20 +66,20 @@ typedef enum {
 } HC_SR04_mode_t;
 
 typedef struct{
-	uint8_t HC_SR04_TRIG; //gpio output for triggering signal
-	uint8_t HC_SR04_ECHO; //gpio input for echo signal
-	HC_SR04_MODE_t HC_SR04_mode; // default: single measurement
-	uint16_t period; // sampling period (if configured as continuous reading)
+	uint8_t 		HC_SR04_TRIG; //gpio output for triggering signal
+	timerCapture_t 	HC_SR04_ECHO; //gpio input for echo signal
+	HC_SR04_mode_t 	HC_SR04_mode; // default: single measurement
+	uint32_t 		period; // sampling period (if configured as continuous reading)
 } HC_SR04_config_t;
 
 typedef struct {
 	HC_SR04_config_t configuration; // sampling configuration
-	uint16_t measurement; //last read value. Used 16bits 'cos based on the
-						  // dynamic range of the sensor (~1333 measurements)
-	float32_t dstmeassurement; // the distance in mm
+	uint32_t measurement; //last read value, in clock ticks
+	real32_t dstmeassurement; // the distance in mm
 	bool_t confiabillity; // true if the measurement was correctly obtained, false otherwise
 	bool_t listening;
-	tick_t t_beggins; // time instant in which the trigger pulse is on;
+	uint32_t t_beggins; // time instant in which the trigger pulse is on;
+	// poner un mensaje
 
 } HC_SR04_data_t ;
 
@@ -90,10 +90,11 @@ typedef struct {
 
 bool_t hc_sr04IsAlive(void);
 bool_t hc_sr04PrepareDefaultConfig( HC_SR04_config_t  * config );
-bool_t hc_sr04Config( HC_SR04_config_t  config );
-bool_t hc_sr04Read();
-bool_t hc_sr04Write();
-bool_t hc_sr04Listening();
+bool_t hc_sr04Configure( HC_SR04_data_t  * base_data, HC_SR04_config_t * config );
+bool_t hc_sr04Rise(HC_SR04_data_t  * base_data);
+bool_t hc_sr04Fall(HC_SR04_data_t  * base_data);
+bool_t hc_sr04Write(HC_SR04_data_t  * base_data);
+bool_t hc_sr04SwitchListeningOff(HC_SR04_data_t  * base_data);
 
 /*==================[cplusplus]==============================================*/
 
@@ -102,4 +103,4 @@ bool_t hc_sr04Listening();
 #endif
 
 /*==================[end of file]============================================*/
-#endif /* #ifndef _SAPI_HMC5883L_H_ */
+#endif /* #ifndef  _SAPI_HC_SR04_H_ */
